@@ -18,7 +18,10 @@ month_order = [
 months_elapsed = month_order.index(AS_OF_MONTH) + 1
 months_remaining = 12 - months_elapsed
 
-# YTD data
+# -----------------------------------------
+# YTD DATA
+# -----------------------------------------
+
 ytd_df = df[
     df["Month"].isin(month_order[:months_elapsed])
 ].copy()
@@ -32,9 +35,17 @@ full_year_target = df["Target_Lakh"].sum()
 
 monthly_run_rate = ytd_sales / months_elapsed
 
-baseline_forecast = monthly_run_rate * 12
+baseline_remaining_sales = (
+    monthly_run_rate * months_remaining
+)
 
-baseline_gap = full_year_target - baseline_forecast
+baseline_forecast = (
+    ytd_sales + baseline_remaining_sales
+)
+
+baseline_gap = (
+    full_year_target - baseline_forecast
+)
 
 # -----------------------------------------
 # SCENARIO ASSUMPTIONS
@@ -47,26 +58,44 @@ WEST_IMPROVEMENT = 10
 # GT SCENARIO
 # -----------------------------------------
 
-gt_sales = ytd_df.loc[
+gt_ytd_sales = ytd_df.loc[
     ytd_df["Channel"] == "GT",
     "Current_Sales_Lakh"
 ].sum()
 
-gt_scenario_impact = (
-    gt_sales * (GT_IMPROVEMENT / 100)
+gt_monthly_run_rate = (
+    gt_ytd_sales / months_elapsed
+)
+
+gt_baseline_remaining = (
+    gt_monthly_run_rate * months_remaining
+)
+
+gt_incremental_revenue = (
+    gt_baseline_remaining *
+    (GT_IMPROVEMENT / 100)
 )
 
 # -----------------------------------------
 # WEST SCENARIO
 # -----------------------------------------
 
-west_sales = ytd_df.loc[
+west_ytd_sales = ytd_df.loc[
     ytd_df["Region"] == "West",
     "Current_Sales_Lakh"
 ].sum()
 
-west_scenario_impact = (
-    west_sales * (WEST_IMPROVEMENT / 100)
+west_monthly_run_rate = (
+    west_ytd_sales / months_elapsed
+)
+
+west_baseline_remaining = (
+    west_monthly_run_rate * months_remaining
+)
+
+west_incremental_revenue = (
+    west_baseline_remaining *
+    (WEST_IMPROVEMENT / 100)
 )
 
 # -----------------------------------------
@@ -74,8 +103,8 @@ west_scenario_impact = (
 # -----------------------------------------
 
 combined_impact = (
-    gt_scenario_impact +
-    west_scenario_impact
+    gt_incremental_revenue +
+    west_incremental_revenue
 )
 
 scenario_forecast = (
@@ -99,6 +128,17 @@ gap_closed = (
 ) * 100
 
 # -----------------------------------------
+# MANAGEMENT STATUS
+# -----------------------------------------
+
+if scenario_achievement >= 100:
+    scenario_status = "ON TRACK"
+elif scenario_achievement >= 95:
+    scenario_status = "WATCH"
+else:
+    scenario_status = "ACTION REQUIRED"
+
+# -----------------------------------------
 # MANAGEMENT OUTPUT
 # -----------------------------------------
 
@@ -107,8 +147,11 @@ print("COMMERCIAL SCENARIO SIMULATOR")
 print("========================================\n")
 
 print(f"As of Month: {AS_OF_MONTH}")
+print(f"Months Remaining: {months_remaining}")
 
 print("\n--- Baseline ---")
+print(f"YTD Sales: ₹{ytd_sales:.2f} Lakh")
+print(f"Current Monthly Run Rate: ₹{monthly_run_rate:.2f} Lakh")
 print(f"Projected Revenue: ₹{baseline_forecast:.2f} Lakh")
 print(f"Projected Gap: ₹{baseline_gap:.2f} Lakh")
 
@@ -118,17 +161,17 @@ print(f"West Improvement: {WEST_IMPROVEMENT}%")
 
 print("\n--- Scenario Impact ---")
 print(
-    f"GT Revenue Impact: "
-    f"+₹{gt_scenario_impact:.2f} Lakh"
+    f"GT Incremental Revenue: "
+    f"+₹{gt_incremental_revenue:.2f} Lakh"
 )
 
 print(
-    f"West Revenue Impact: "
-    f"+₹{west_scenario_impact:.2f} Lakh"
+    f"West Incremental Revenue: "
+    f"+₹{west_incremental_revenue:.2f} Lakh"
 )
 
 print(
-    f"Combined Revenue Impact: "
+    f"Combined Incremental Revenue: "
     f"+₹{combined_impact:.2f} Lakh"
 )
 
@@ -151,4 +194,9 @@ print(
 print(
     f"Projected Gap Closed: "
     f"{gap_closed:.1f}%"
+)
+
+print(
+    f"Scenario Management Status: "
+    f"{scenario_status}"
 )
