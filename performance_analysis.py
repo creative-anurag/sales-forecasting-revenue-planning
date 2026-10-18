@@ -3,6 +3,22 @@ import pandas as pd
 # Load sales data
 df = pd.read_csv("sales_forecasting_sample_data.csv")
 
+# Forecast analysis as of a specific month
+AS_OF_MONTH = "Sep-26"
+
+month_order = [
+    "Apr-26", "May-26", "Jun-26", "Jul-26",
+    "Aug-26", "Sep-26", "Oct-26", "Nov-26",
+    "Dec-26", "Jan-27", "Feb-27", "Mar-27"
+]
+
+months_elapsed = month_order.index(AS_OF_MONTH) + 1
+
+# Analyse only completed months
+df = df[df["Month"].isin(
+    month_order[:months_elapsed]
+)].copy()
+
 # Calculate growth
 df["Growth_%"] = (
     (df["Current_Sales_Lakh"] - df["Previous_Year_Sales_Lakh"])
