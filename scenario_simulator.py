@@ -27,7 +27,7 @@ ytd_df = df[
 ].copy()
 
 # -----------------------------------------
-# BASELINE FORECAST
+# BASELINE
 # -----------------------------------------
 
 ytd_sales = ytd_df["Current_Sales_Lakh"].sum()
@@ -48,14 +48,7 @@ baseline_gap = (
 )
 
 # -----------------------------------------
-# SCENARIO ASSUMPTIONS
-# -----------------------------------------
-
-GT_IMPROVEMENT = 10
-WEST_IMPROVEMENT = 10
-
-# -----------------------------------------
-# GT SCENARIO
+# SEGMENT BASELINES
 # -----------------------------------------
 
 gt_ytd_sales = ytd_df.loc[
@@ -63,87 +56,110 @@ gt_ytd_sales = ytd_df.loc[
     "Current_Sales_Lakh"
 ].sum()
 
-gt_monthly_run_rate = (
-    gt_ytd_sales / months_elapsed
-)
-
-gt_baseline_remaining = (
-    gt_monthly_run_rate * months_remaining
-)
-
-gt_incremental_revenue = (
-    gt_baseline_remaining *
-    (GT_IMPROVEMENT / 100)
-)
-
-# -----------------------------------------
-# WEST SCENARIO
-# -----------------------------------------
-
 west_ytd_sales = ytd_df.loc[
     ytd_df["Region"] == "West",
     "Current_Sales_Lakh"
 ].sum()
 
-west_monthly_run_rate = (
-    west_ytd_sales / months_elapsed
+gt_monthly_run_rate = gt_ytd_sales / months_elapsed
+west_monthly_run_rate = west_ytd_sales / months_elapsed
+
+gt_remaining_baseline = (
+    gt_monthly_run_rate * months_remaining
 )
 
-west_baseline_remaining = (
+west_remaining_baseline = (
     west_monthly_run_rate * months_remaining
 )
 
-west_incremental_revenue = (
-    west_baseline_remaining *
-    (WEST_IMPROVEMENT / 100)
-)
-
 # -----------------------------------------
-# COMBINED SCENARIO
+# SCENARIOS
 # -----------------------------------------
 
-combined_impact = (
-    gt_incremental_revenue +
-    west_incremental_revenue
-)
-
-scenario_forecast = (
-    baseline_forecast +
-    combined_impact
-)
-
-scenario_gap = (
-    full_year_target -
-    scenario_forecast
-)
-
-scenario_achievement = (
-    scenario_forecast /
-    full_year_target
-) * 100
-
-gap_closed = (
-    combined_impact /
-    baseline_gap
-) * 100
+scenarios = {
+    "BASE": {
+        "GT": 0,
+        "WEST": 0
+    },
+    "UPSIDE": {
+        "GT": 10,
+        "WEST": 10
+    },
+    "STRETCH": {
+        "GT": 15,
+        "WEST": 15
+    }
+}
 
 # -----------------------------------------
-# MANAGEMENT STATUS
+# SCENARIO ENGINE
 # -----------------------------------------
 
-if scenario_achievement >= 100:
-    scenario_status = "ON TRACK"
-elif scenario_achievement >= 95:
-    scenario_status = "WATCH"
-else:
-    scenario_status = "ACTION REQUIRED"
+results = []
+
+for scenario_name, assumptions in scenarios.items():
+
+    gt_impact = (
+        gt_remaining_baseline *
+        assumptions["GT"] / 100
+    )
+
+    west_impact = (
+        west_remaining_baseline *
+        assumptions["WEST"] / 100
+    )
+
+    total_incremental = (
+        gt_impact + west_impact
+    )
+
+    projected_revenue = (
+        baseline_forecast +
+        total_incremental
+    )
+
+    projected_achievement = (
+        projected_revenue /
+        full_year_target
+    ) * 100
+
+    projected_gap = (
+        full_year_target -
+        projected_revenue
+    )
+
+    gap_closed = (
+        total_incremental /
+        baseline_gap
+    ) * 100
+
+    if projected_achievement >= 100:
+        status = "ON TRACK"
+    elif projected_achievement >= 95:
+        status = "WATCH"
+    else:
+        status = "ACTION REQUIRED"
+
+    results.append({
+        "Scenario": scenario_name,
+        "GT Improvement %": assumptions["GT"],
+        "West Improvement %": assumptions["WEST"],
+        "Incremental Revenue Lakh": total_incremental,
+        "Projected Revenue Lakh": projected_revenue,
+        "Achievement %": projected_achievement,
+        "Gap Lakh": max(projected_gap, 0),
+        "Gap Closed %": gap_closed,
+        "Status": status
+    })
 
 # -----------------------------------------
-# MANAGEMENT OUTPUT
+# OUTPUT
 # -----------------------------------------
+
+results_df = pd.DataFrame(results)
 
 print("\n========================================")
-print("COMMERCIAL SCENARIO SIMULATOR")
+print("MULTI-SCENARIO COMMERCIAL ENGINE")
 print("========================================\n")
 
 print(f"As of Month: {AS_OF_MONTH}")
@@ -151,52 +167,45 @@ print(f"Months Remaining: {months_remaining}")
 
 print("\n--- Baseline ---")
 print(f"YTD Sales: ₹{ytd_sales:.2f} Lakh")
-print(f"Current Monthly Run Rate: ₹{monthly_run_rate:.2f} Lakh")
-print(f"Projected Revenue: ₹{baseline_forecast:.2f} Lakh")
-print(f"Projected Gap: ₹{baseline_gap:.2f} Lakh")
+print(f"Monthly Run Rate: ₹{monthly_run_rate:.2f} Lakh")
+print(f"Annual Target: ₹{full_year_target:.2f} Lakh")
+print(f"Baseline Forecast: ₹{baseline_forecast:.2f} Lakh")
+print(f"Baseline Gap: ₹{baseline_gap:.2f} Lakh")
 
-print("\n--- Scenario Assumptions ---")
-print(f"GT Improvement: {GT_IMPROVEMENT}%")
-print(f"West Improvement: {WEST_IMPROVEMENT}%")
+print("\n--- Scenario Comparison ---")
 
-print("\n--- Scenario Impact ---")
-print(
-    f"GT Incremental Revenue: "
-    f"+₹{gt_incremental_revenue:.2f} Lakh"
-)
+for _, row in results_df.iterrows():
 
-print(
-    f"West Incremental Revenue: "
-    f"+₹{west_incremental_revenue:.2f} Lakh"
-)
-
-print(
-    f"Combined Incremental Revenue: "
-    f"+₹{combined_impact:.2f} Lakh"
-)
-
-print("\n--- Scenario Outcome ---")
-print(
-    f"Scenario Projected Revenue: "
-    f"₹{scenario_forecast:.2f} Lakh"
-)
-
-print(
-    f"Scenario Achievement: "
-    f"{scenario_achievement:.1f}%"
-)
-
-print(
-    f"Scenario Gap: "
-    f"₹{scenario_gap:.2f} Lakh"
-)
-
-print(
-    f"Projected Gap Closed: "
-    f"{gap_closed:.1f}%"
-)
-
-print(
-    f"Scenario Management Status: "
-    f"{scenario_status}"
-)
+    print(f"\n{row['Scenario']} CASE")
+    print(
+        f"GT Improvement: "
+        f"{row['GT Improvement %']:.0f}%"
+    )
+    print(
+        f"West Improvement: "
+        f"{row['West Improvement %']:.0f}%"
+    )
+    print(
+        f"Incremental Revenue: "
+        f"+₹{row['Incremental Revenue Lakh']:.2f} Lakh"
+    )
+    print(
+        f"Projected Revenue: "
+        f"₹{row['Projected Revenue Lakh']:.2f} Lakh"
+    )
+    print(
+        f"Achievement: "
+        f"{row['Achievement %']:.1f}%"
+    )
+    print(
+        f"Remaining Gap: "
+        f"₹{row['Gap Lakh']:.2f} Lakh"
+    )
+    print(
+        f"Gap Closed: "
+        f"{row['Gap Closed %']:.1f}%"
+    )
+    print(
+        f"Management Status: "
+        f"{row['Status']}"
+    )
