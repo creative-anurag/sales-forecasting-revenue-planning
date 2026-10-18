@@ -135,7 +135,7 @@ for scenario_name, assumptions in scenarios.items():
 
     if projected_achievement >= 100:
         status = "ON TRACK"
-    elif projected_achievement >= 95:
+    elif projected_achievement >= 90:
         status = "WATCH"
     else:
         status = "ACTION REQUIRED"
