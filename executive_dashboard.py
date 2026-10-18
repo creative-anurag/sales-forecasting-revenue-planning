@@ -34,8 +34,6 @@ as_of_index = month_order.index(AS_OF_MONTH)
 months_completed = as_of_index + 1
 months_remaining = len(month_order) - months_completed
 
-ytd_df = df.iloc[:0].copy()
-
 ytd_df = df[
     df["Month"].cat.codes <= as_of_index
 ].copy()
@@ -276,14 +274,41 @@ for name, assumption in scenarios.items():
 
 
 # ========================================
+# AI MANAGEMENT COMMENTARY
+# ========================================
+
+stretch_result = next(
+    result for result in scenario_results
+    if result[0] == "STRETCH"
+)
+
+(
+    stretch_name,
+    stretch_gt,
+    stretch_west,
+    stretch_incremental,
+    stretch_revenue,
+    stretch_achievement,
+    stretch_gap,
+    stretch_gap_closed,
+    stretch_status
+) = stretch_result
+
+
+# ========================================
 # EXECUTIVE DASHBOARD OUTPUT
 # ========================================
 
-print("=" * 55)
-print("        EXECUTIVE MANAGEMENT DASHBOARD")
-print("=" * 55)
+print("=" * 70)
+print("             EXECUTIVE MANAGEMENT DASHBOARD")
+print("=" * 70)
 
 print(f"\nAs of Month: {AS_OF_MONTH}")
+
+
+# ----------------------------------------
+# Revenue Health
+# ----------------------------------------
 
 print("\n--- REVENUE HEALTH ---")
 
@@ -296,6 +321,10 @@ print(f"Projected Achievement: {projected_achievement:.1f}%")
 print(f"Projected Gap: ₹{projected_gap:.2f} Lakh")
 print(f"Management Status: {management_status}")
 
+
+# ----------------------------------------
+# Performance Alerts
+# ----------------------------------------
 
 print("\n--- PERFORMANCE ALERTS ---")
 
@@ -320,6 +349,10 @@ print(
 )
 
 
+# ----------------------------------------
+# Scenario Outlook
+# ----------------------------------------
+
 print("\n--- SCENARIO OUTLOOK ---")
 
 for result in scenario_results:
@@ -337,55 +370,138 @@ for result in scenario_results:
     ) = result
 
     print(f"\n{name} CASE")
+
     print(
         f"GT: +{gt_improvement}% | "
         f"West: +{west_improvement}%"
     )
+
     print(
         f"Incremental Revenue: "
         f"+₹{incremental:.2f}L"
     )
+
     print(
         f"Projected Revenue: "
         f"₹{projected:.2f}L"
     )
+
     print(
         f"Achievement: "
         f"{achievement:.1f}%"
     )
+
     print(
         f"Remaining Gap: "
         f"₹{remaining_gap:.2f}L"
     )
+
     print(
         f"Gap Closed: "
         f"{gap_closed:.1f}%"
     )
+
     print(
         f"Status: {status}"
     )
 
 
+# ========================================
+# AI MANAGEMENT COMMENTARY
+# ========================================
+
+print("\n--- AI MANAGEMENT COMMENTARY ---")
+
+print(
+    f"Business is currently tracking at "
+    f"{ytd_achievement:.1f}% YTD achievement."
+)
+
+print(
+    f"The current run rate of ₹{monthly_run_rate:.2f}L "
+    f"projects full-year revenue of "
+    f"₹{projected_revenue:.2f}L."
+)
+
+print(
+    f"This creates a projected annual gap of "
+    f"₹{projected_gap:.2f}L against the "
+    f"₹{full_year_target:.2f}L target."
+)
+
+print("\nKEY BUSINESS RISK")
+
+print(
+    f"The business needs to increase its monthly "
+    f"run rate from ₹{monthly_run_rate:.2f}L to "
+    f"₹{required_monthly_run_rate:.2f}L."
+)
+
+print(
+    f"This represents a required uplift of "
+    f"approximately {run_rate_uplift:.1f}%."
+)
+
+print("\nPRIORITY AREAS")
+
+print(
+    f"{primary_channel['Channel']} is the highest-priority "
+    f"channel with a YTD gap of "
+    f"₹{primary_channel['Gap_Lakh']:.2f}L."
+)
+
+print(
+    f"{primary_region['Region']} is the highest-priority "
+    f"region with a YTD gap of "
+    f"₹{primary_region['Gap_Lakh']:.2f}L."
+)
+
+print("\nSCENARIO INSIGHT")
+
+print(
+    f"Under the Stretch scenario, with "
+    f"{stretch_gt}% improvement in both GT and West, "
+    f"projected revenue increases to "
+    f"₹{stretch_revenue:.2f}L."
+)
+
+print(
+    f"This represents {stretch_achievement:.1f}% achievement "
+    f"and closes approximately "
+    f"{stretch_gap_closed:.1f}% of the projected gap."
+)
+
+print(
+    f"Even under the Stretch scenario, approximately "
+    f"₹{stretch_gap:.2f}L remains to be closed."
+)
+
+
+# ----------------------------------------
+# Executive Recommendation
+# ----------------------------------------
+
 print("\n--- EXECUTIVE RECOMMENDATION ---")
 
 print(
-    f"1. Prioritize {primary_channel['Channel']} "
-    f"to address the largest channel gap."
+    f"1. Focus immediate commercial intervention on "
+    f"{primary_channel['Channel']} and "
+    f"{primary_region['Region']}."
 )
 
 print(
-    f"2. Prioritize {primary_region['Region']} "
-    f"to address the largest regional gap."
-)
-
-print(
-    f"3. Lift monthly run rate by approximately "
+    f"2. Raise the monthly run rate by at least "
     f"{run_rate_uplift:.1f}%."
 )
 
 print(
-    "4. Use scenario planning to track whether "
-    "commercial interventions are sufficient."
+    "3. Track incremental revenue generated from "
+    "each commercial intervention."
 )
 
-print("\n" + "=" * 55)
+print(
+    "4. Use the Stretch scenario as the minimum "
+    "recovery benchmark rather than the final objective."
+)
+
+print("\n" + "=" * 70)
